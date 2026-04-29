@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Persona Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ── */
+:root {
+  --bg:       #fdfcf8;
+  --surface:  #ffffff;
+  --surface2: #f7f5f0;
+  --surface3: #efede8;
+  --border:   #e8e5de;
+  --border2:  #d6d2c8;
+  --accent:   #c85a1e;
+  --acc-lt:   #fef0e8;
+  --acc-mid:  #e8733a;
+  --acc-dk:   #9e3f0f;
+  --text:     #1e1b18;
+  --dim:      #6b6560;
+  --muted:    #b0ab9f;
+  --green:    #1a7f52;
+  --glt:      #ecfdf5;
+  --red:      #c0392b;
+  --rlt:      #fef2f2;
+  --sh-sm:    0 1px 3px rgba(30,27,24,.08),0 1px 2px rgba(30,27,24,.04);
+  --sh-md:    0 4px 16px rgba(30,27,24,.1),0 2px 4px rgba(30,27,24,.06);
+  --sh-lg:    0 12px 40px rgba(30,27,24,.14),0 4px 8px rgba(30,27,24,.06);
+  --r:        12px;
+  --df:       'Playfair Display',Georgia,serif;
+  --bf:       'DM Sans',system-ui,sans-serif;
+  --mf:       'JetBrains Mono','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--bf);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");opacity:1;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--surface2);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+::selection{background:var(--acc-lt);color:var(--acc-dk);}
+
+/* ── Keyframes ── */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes spin    {to{transform:rotate(360deg)}}
+@keyframes bounce3 {0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-6px);opacity:1}}
+@keyframes shimmer {0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes glow    {0%,100%{box-shadow:0 0 0 0 rgba(200,90,30,.2)}50%{box-shadow:0 0 0 5px rgba(200,90,30,0)}}
+@keyframes resultIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes histIn  {from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes checkPop{0%{transform:scale(0) rotate(-45deg)}60%{transform:scale(1.25) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes tabIn   {from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+/* ── Layout ── */
+#app{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 28px;}
+@media(max-width:700px){#app{padding:0 16px;}}
+
+/* ── Header ── */
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:40px 0 24px;border-bottom:1.5px solid var(--border);animation:fadeUp .5s ease-out both;}
+.logo-pill{display:inline-flex;align-items:center;gap:6px;background:var(--acc-lt);color:var(--accent);font-family:var(--mf);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;border:1px solid rgba(200,90,30,.2);margin-bottom:8px;}
+h1{font-family:var(--df);font-size:clamp(22px,4vw,38px);font-weight:900;line-height:1.1;color:var(--text);}
+h1 em{font-style:normal;color:var(--accent);}
+.sub{margin-top:8px;font-size:13px;color:var(--dim);max-width:460px;line-height:1.65;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:6px;}
+.badge{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:100px;background:var(--surface);border:1px solid var(--border);font-family:var(--mf);font-size:11px;color:var(--dim);box-shadow:var(--sh-sm);}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 2.5s infinite;}
+.btn-hist-toggle{display:flex;align-items:center;gap:6px;padding:7px 15px;border-radius:100px;background:var(--surface);border:1px solid var(--border);font-family:var(--mf);font-size:11px;color:var(--dim);cursor:pointer;transition:all .18s;box-shadow:var(--sh-sm);position:relative;}
+.btn-hist-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--acc-lt);}
+.btn-hist-toggle svg{width:13px;height:13px;}
+.hbadge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-family:var(--mf);font-size:9px;min-width:16px;height:16px;border-radius:100px;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);transition:transform .2s;}
+.hbadge.pop{animation:checkPop .3s ease-out;}
+
+/* ── API Bar ── */
+.apibar{margin-top:20px;padding:13px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);display:flex;align-items:center;gap:12px;flex-wrap:wrap;animation:fadeUp .5s .1s ease-out both;}
+.apibar-lbl{font-family:var(--mf);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.apibar input{flex:1;min-width:220px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-family:var(--mf);font-size:12px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.apibar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,90,30,.1);}
+.apibar input::placeholder{color:var(--muted);}
+.apibar-tip{font-size:11.5px;color:var(--muted);}
+.apibar-tip a{color:var(--accent);text-decoration:none;}
+.apibar-tip a:hover{text-decoration:underline;}
+.apibar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;}
+.apibar-sep{color:var(--muted);font-size:12px;}
+.btn-save-key{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--accent);background:var(--acc-lt);color:var(--accent);font-family:var(--mf);font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
+.btn-save-key:hover{background:var(--accent);color:#fff;}
+.btn-save-key.saved{border-color:var(--green);background:var(--glt);color:var(--green);cursor:default;}
+.btn-save-key svg{flex-shrink:0;}
+/* ── Export / Import ── */
+.data-bar{margin-top:12px;padding:12px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:fadeUp .5s .15s ease-out both;}
+.data-bar-lbl{font-family:var(--mf);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);white-space:nowrap;}
+.data-bar-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-data{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;font-family:var(--mf);font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;border:1.5px solid;}
+.btn-data.export{border-color:var(--border2);background:var(--surface);color:var(--dim);}
+.btn-data.export:hover{border-color:var(--accent);color:var(--accent);background:var(--acc-lt);}
+.btn-data.import{border-color:var(--accent);background:var(--acc-lt);color:var(--accent);}
+.btn-data.import:hover{background:var(--accent);color:#fff;}
+.btn-data svg{width:11px;height:11px;flex-shrink:0;}
+.data-tip{font-size:11px;color:var(--muted);margin-left:auto;}
+#importFile{display:none;}
+
+/* ── Tabs ── */
+.tabs-nav{display:flex;border-bottom:1.5px solid var(--border);margin-top:28px;animation:fadeUp .5s .2s ease-out both;}
+.tab-btn{display:flex;align-items:center;gap:7px;padding:11px 20px;font-family:var(--mf);font-size:11.5px;font-weight:700;background:none;border:none;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;color:var(--muted);transition:color .2s,border-color .2s,background .2s;border-radius:8px 8px 0 0;}
+.tab-btn:hover{color:var(--text);background:var(--surface2);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--acc-lt);}
+.tab-btn svg{width:12px;height:12px;transition:transform .2s;}
+.tab-btn.active svg{transform:scale(1.1);}
+.tab-panel{display:none;padding:28px 0 60px;}
+.tab-panel.active{display:block;}
+.tab-panel.anim-in{animation:tabIn .3s ease-out both;}
+
+/* ── Generate Layout ── */
+.gen-grid{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start;}
+@media(max-width:900px){.gen-grid{grid-template-columns:1fr;}}
+.gen-left{position:sticky;top:20px;display:flex;flex-direction:column;gap:0;}
+@media(max-width:900px){.gen-left{position:static;}}
+
+/* ── Input Card ── */
+.icard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);padding:24px;display:flex;flex-direction:column;gap:20px;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.lbl{font-family:var(--mf);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:5px;}
+.req{color:var(--red);}
+.lbl-row{display:flex;justify-content:space-between;align-items:center;}
+
+/* select */
+.sel-wrap{position:relative;}
+.sel-wrap svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dim);width:14px;height:14px;}
+select{width:100%;appearance:none;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:11px 36px 11px 14px;font-family:var(--bf);font-size:13px;cursor:pointer;outline:none;transition:border-color .2s,box-shadow .2s;}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,90,30,.1);}
+.creator-sub{font-family:var(--mf);font-size:10.5px;color:var(--muted);padding-left:2px;}
+/* ── Custom Creator Dropdown ── */
+.c-drop{position:relative;width:100%;}
+.c-drop-trigger{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  color:var(--text);border-radius:10px;padding:11px 14px;
+  font-family:var(--bf);font-size:13px;cursor:pointer;
+  transition:border-color .2s,background .2s;
+  user-select:none;
+}
+.c-drop-trigger:hover{border-color:var(--border2);background:var(--surface3);}
+.c-drop-trigger.open{border-color:var(--accent);background:var(--surface);}
+.c-drop-trigger-label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.c-drop-arrow{flex-shrink:0;color:var(--dim);transition:transform .2s;}
+.c-drop-trigger.open .c-drop-arrow{transform:rotate(180deg);}
+.c-drop-menu{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:200;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;box-shadow:var(--sh-md);
+  overflow:hidden;
+  opacity:0;transform:translateY(-6px);pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease;
+}
+.c-drop-menu.open{opacity:1;transform:translateY(0);pointer-events:all;}
+.c-drop-item{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;cursor:pointer;font-size:13px;
+  color:var(--text);transition:background .12s;
+  border-bottom:1px solid var(--border);
+}
+.c-drop-item:last-child{border-bottom:none;}
+.c-drop-item:hover{background:var(--surface2);}
+.c-drop-item.active{background:var(--acc-lt);color:var(--acc-dk);}
+.c-drop-item-icon{font-size:16px;flex-shrink:0;}
+.c-drop-item-text{flex:1;min-width:0;}
+.c-drop-item-name{font-weight:500;}
+.c-drop-item-desc{font-size:11px;color:var(--muted);font-family:var(--mf);}
+.c-drop-check{flex-shrink:0;color:var(--accent);}
+.c-drop-del{
+  margin-left:auto;flex-shrink:0;
+  width:20px;height:20px;border-radius:5px;
+  background:none;border:none;cursor:pointer;
+  color:var(--muted);display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .15s,background .15s,color .15s;
+}
+.c-drop-item:hover .c-drop-del{opacity:1;}
+.c-drop-del:hover{background:var(--rlt);color:var(--red);}
+
+/* format buttons */
+.fmt-grid{display:flex;flex-direction:column;gap:8px;}
+.fmt-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;text-align:left;width:100%;transition:border-color .22s ease,background .22s ease,transform .18s ease,box-shadow .22s ease;}
+.fmt-btn:hover{border-color:var(--border2);background:var(--surface3);}
+.fmt-btn.selected{border-color:var(--accent);background:var(--acc-lt);box-shadow:0 0 0 3px rgba(200,90,30,.12);}
+.fmt-icon{font-size:18px;line-height:1;flex-shrink:0;width:24px;text-align:center;}
+.fmt-text{flex:1;}
+.fmt-name{font-size:13px;font-weight:500;color:var(--text);display:block;transition:color .2s;}
+.fmt-btn.selected .fmt-name{color:var(--acc-dk);}
+.fmt-hint{font-size:11px;color:var(--muted);display:block;font-family:var(--mf);margin-top:2px;}
+.fmt-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s,background .2s;}
+.fmt-btn.selected .fmt-radio{border-color:var(--accent);background:var(--accent);}
+.fmt-rdot{width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transform:scale(0);transition:opacity .18s ease,transform .18s ease;}
+.fmt-btn.selected .fmt-rdot{opacity:1;transform:scale(1);}
+
+/* textarea & text input */
+textarea,input[type="text"]{width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:var(--bf);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+textarea{line-height:1.65;resize:vertical;}
+textarea:focus,input[type="text"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,90,30,.1);}
+textarea::placeholder,input[type="text"]::placeholder{color:var(--muted);}
+.key-hint{font-size:11px;color:var(--muted);}
+kbd{display:inline-block;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:0 5px;font-family:var(--mf);font-size:10px;color:var(--dim);}
+
+/* generate button */
+.btn-gen{width:100%;padding:15px 20px;background:var(--accent);color:#fff;font-family:var(--mf);font-size:13px;font-weight:700;border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .2s,box-shadow .2s,transform .15s;box-shadow:0 3px 12px rgba(200,90,30,.35),0 1px 3px rgba(200,90,30,.2);letter-spacing:.02em;}
+.btn-gen:hover:not(:disabled){background:var(--acc-mid);box-shadow:0 6px 22px rgba(200,90,30,.45);transform:translateY(-2px);}
+.btn-gen:active:not(:disabled){transform:scale(.975);}
+.btn-gen:disabled{background:var(--surface3);color:var(--muted);box-shadow:none;cursor:not-allowed;border:1.5px solid var(--border);}
+.btn-gen.success{background:var(--green)!important;box-shadow:0 3px 12px rgba(26,127,82,.35)!important;cursor:default!important;transform:none!important;}
+.btn-gen svg{width:15px;height:15px;flex-shrink:0;}
+.btn-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:6px;min-height:16px;transition:opacity .2s;}
+.btn-hint.hidden{opacity:0;}
+.bdots{display:flex;gap:5px;}
+.bdots span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:bounce3 1.2s ease-in-out infinite;}
+.bdots span:nth-child(2){animation-delay:.18s;}
+.bdots span:nth-child(3){animation-delay:.36s;}
+
+/* ── Result Panel ── */
+.result-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);min-height:560px;display:flex;flex-direction:column;overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+.result-panel.has-r{border-color:var(--border2);box-shadow:var(--sh-md);}
+.result-topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tldots{display:flex;gap:6px;}
+.tl{width:11px;height:11px;border-radius:50%;}
+.tl.r{background:#fc6058;}.tl.y{background:#fec02f;}.tl.g{background:#2aca44;}
+.rmeta{font-family:var(--mf);font-size:11px;color:var(--muted);flex:1;}
+.spill{display:flex;align-items:center;gap:5px;font-family:var(--mf);font-size:10.5px;padding:3px 9px;border-radius:100px;}
+.spill.ok{background:var(--glt);color:var(--green);}
+.spill.busy{background:var(--acc-lt);color:var(--accent);}
+.spill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.result-body{flex:1;overflow-y:auto;padding:24px;transition:opacity .18s ease;}
+.result-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);flex-shrink:0;}
+.char-ct{font-family:var(--mf);font-size:11px;color:var(--muted);}
+
+/* state: empty */
+.s-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:100%;min-height:440px;text-align:center;}
+.s-empty-icon{width:64px;height:64px;border-radius:16px;border:1.5px solid var(--border);background:var(--surface2);display:grid;place-items:center;font-size:28px;box-shadow:var(--sh-sm);}
+.s-empty-title{font-family:var(--df);font-size:18px;font-weight:700;color:var(--dim);}
+.s-empty-sub{font-size:12.5px;color:var(--muted);line-height:1.6;}
+
+/* state: loading */
+.s-load{display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;height:100%;min-height:440px;padding:32px;}
+.spin-ring{width:44px;height:44px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--accent);animation:spin 1s linear infinite;}
+.load-lbl{font-family:var(--mf);font-size:12.5px;color:var(--accent);}
+.load-sub{font-size:12px;color:var(--muted);margin-top:-8px;}
+.shims{width:100%;display:flex;flex-direction:column;gap:9px;margin-top:4px;}
+.shim{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.7s infinite;}
+
+/* state: error */
+.s-err{display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:440px;text-align:center;padding:32px;}
+.err-badge{width:50px;height:50px;border-radius:50%;background:var(--rlt);border:1.5px solid rgba(192,57,43,.25);display:grid;place-items:center;}
+.err-msg{font-family:var(--mf);font-size:12px;color:var(--red);max-width:320px;line-height:1.6;}
+.btn-retry{font-family:var(--mf);font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;}
+.btn-retry:hover{text-decoration:underline;}
+
+/* state: result */
+.s-result{display:none;animation:resultIn .45s ease-out both;}
+.result-pre{white-space:pre-wrap;font-family:var(--mf);font-size:12.5px;line-height:2;color:var(--text);}
+
+/* copy button */
+.btn-copy{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--dim);font-family:var(--mf);font-size:11px;cursor:pointer;transition:all .18s;}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent);background:var(--acc-lt);}
+.btn-copy.copied{border-color:var(--green);color:var(--green);background:var(--glt);}
+.btn-copy svg{width:11px;height:11px;}
+
+/* ── Add Creator ── */
+.add-wrap{max-width:700px;}
+.add-hd{margin-bottom:28px;}
+.add-hd h2{font-family:var(--df);font-size:24px;font-weight:700;}
+.add-hd p{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.65;}
+.acard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);padding:28px;display:flex;flex-direction:column;gap:20px;}
+.row2{display:grid;grid-template-columns:1fr 110px;gap:16px;}
+@media(max-width:500px){.row2{grid-template-columns:1fr;}}
+.emoji-inp{text-align:center;font-size:20px;}
+.tmpl-btn{font-family:var(--mf);font-size:10.5px;color:var(--accent);background:none;border:none;cursor:pointer;}
+.tmpl-btn:hover{text-decoration:underline;}
+.pcount{font-family:var(--mf);font-size:11px;color:var(--muted);margin-top:4px;}
+.add-err{display:none;padding:11px 16px;background:var(--rlt);border:1px solid rgba(192,57,43,.2);border-radius:9px;font-family:var(--mf);font-size:12px;color:var(--red);animation:fadeIn .2s;}
+.tips{margin-top:4px;padding:18px 20px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);}
+.tips-tag{font-family:var(--mf);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+.tips ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.tips ul li{display:flex;gap:10px;font-size:12.5px;color:var(--dim);line-height:1.5;}
+.tips ul li span{font-family:var(--mf);color:var(--muted);flex-shrink:0;font-size:11px;}
+
+/* ── History Drawer ── */
+#overlay{position:fixed;inset:0;background:rgba(30,27,24,.3);backdrop-filter:blur(3px);z-index:900;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+#overlay.open{opacity:1;pointer-events:all;}
+#hdr{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--bg);border-left:1.5px solid var(--border);box-shadow:var(--sh-lg);z-index:901;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
+#hdr.open{transform:translateX(0);}
+.drw-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.drw-title{font-family:var(--df);font-size:18px;font-weight:700;}
+.drw-acts{display:flex;align-items:center;gap:8px;}
+.btn-clr{font-family:var(--mf);font-size:10.5px;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:5px;transition:color .15s,background .15s;}
+.btn-clr:hover{color:var(--red);background:var(--rlt);}
+.btn-drw-close{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:all .15s;}
+.btn-drw-close:hover{background:var(--rlt);color:var(--red);}
+.btn-drw-close svg{width:13px;height:13px;}
+.drw-body{flex:1;overflow-y:auto;padding:16px;}
+.h-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%;min-height:300px;text-align:center;}
+.h-empty-icon{font-size:36px;opacity:.35;}
+.h-empty-txt{font-size:13px;color:var(--muted);font-family:var(--mf);}
+.h-list{display:flex;flex-direction:column;gap:10px;}
+.h-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .18s;position:relative;overflow:hidden;animation:histIn .3s ease-out both;}
+.h-item:hover{border-color:var(--accent);box-shadow:var(--sh-sm);transform:translateY(-1px);}
+.h-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:7px;}
+.h-creator{font-size:13px;font-weight:600;}
+.h-fmt{font-family:var(--mf);font-size:9.5px;background:var(--acc-lt);color:var(--accent);padding:2px 8px;border-radius:100px;white-space:nowrap;border:1px solid rgba(200,90,30,.2);}
+.h-theme{font-size:12px;color:var(--dim);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.h-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.h-time,.h-chars{font-family:var(--mf);font-size:10px;color:var(--muted);}
+.btn-hdel{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .15s,background .15s;}
+.h-item:hover .btn-hdel{opacity:1;}
+.btn-hdel:hover{background:var(--rlt);}
+.btn-hdel svg{width:10px;height:10px;color:var(--red);}
+
+/* ── Analyze Tab ── */
+.analyze-icon-preview{
+  width:56px;height:56px;border-radius:14px;
+  border:1.5px solid var(--border);background:var(--surface2);
+  display:grid;place-items:center;font-size:26px;flex-shrink:0;
+  box-shadow:var(--sh-sm);
+}
+.analyze-preview-val{
+  font-size:14px;font-weight:500;color:var(--text);
+  padding:10px 14px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;
+  line-height:1.5;
+}
+.analyze-prompt-preview{
+  font-family:var(--mf);font-size:11.5px;color:var(--text);
+  line-height:1.9;white-space:pre-wrap;
+  padding:14px 16px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;
+  max-height:320px;overflow-y:auto;
+}
+.analyze-emoji-box{
+  padding:14px 16px;background:var(--acc-lt);
+  border:1px solid rgba(200,90,30,.2);border-radius:10px;
+}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);font-family:var(--mf);font-size:12px;padding:10px 20px;border-radius:100px;box-shadow:var(--sh-lg);z-index:9999;pointer-events:none;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo-pill">✦ Creator Persona Studio</div>
+    <h1>ペルソナ<em>憑依</em>スタジオ</h1>
+    <p class="sub">クリエイターの思考・口調・哲学を完全憑依させた高度なゴーストライティングツール</p>
+  </div>
+  <div class="hdr-right">
+    <div class="badge"><div class="bdot"></div><span id="badge-lbl">1 クリエイター</span></div>
+    <button class="btn-hist-toggle" onclick="openDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+      履歴
+      <span class="hbadge" id="hbadge" style="display:none">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- API KEY BAR -->
+<div class="apibar" style="animation:fadeUp .5s .1s ease-out both">
+  <span class="apibar-lbl">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    Gemini API Key
+  </span>
+  <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off" oninput="onKeyIn()">
+  <button class="btn-save-key" id="saveKeyBtn" onclick="saveKey()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    保存
+  </button>
+  <div class="apibar-right">
+    <span class="apibar-tip">取得: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></span>
+    <span class="apibar-sep">·</span>
+    <span class="apibar-lbl">モデル</span>
+    <div class="sel-wrap" style="min-width:230px">
+      <select id="modelSel" onchange="onModelChange()" style="padding:7px 32px 7px 10px;font-size:11px;border-radius:7px;">
+        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite（推奨・無料）</option>
+        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+        <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;right:9px;"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- DATA BAR: Export / Import -->
+<div class="data-bar" style="animation:fadeUp .5s .15s ease-out both">
+  <span class="data-bar-lbl">📦 クリエーターデータ</span>
+  <div class="data-bar-btns">
+    <button class="btn-data export" onclick="exportCreators()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      エクスポート（JSON）
+    </button>
+    <button class="btn-data export" onclick="exportHtml()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      エクスポート（HTML・APIキー込み）
+    </button>
+    <button class="btn-data import" onclick="document.getElementById('importFile').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      インポート（JSON読込）
+    </button>
+    <input type="file" id="importFile" accept=".json" onchange="importCreators(event)">
+  </div>
+  <span class="data-tip">🔒 HTML版はローカル専用（GitHubにはアップしないでください）</span>
+</div>
+
+<!-- TABS NAV -->
+<div class="tabs-nav" style="animation:fadeUp .5s .2s ease-out both">
+  <button class="tab-btn active" data-tab="generate" onclick="switchTab('generate')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>生成
+  </button>
+  <button class="tab-btn" data-tab="add" onclick="switchTab('add')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>クリエイター登録
+  </button>
+  <button class="tab-btn" data-tab="analyze" onclick="switchTab('analyze')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>チャンネル分析
+  </button>
+  <button class="tab-btn" data-tab="memo" onclick="switchTab('memo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>メモ
+  </button>
+</div>
+
+<div class="tab-container">
+
+<!-- ====== TAB: GENERATE ====== -->
+<div id="tab-generate" class="tab-panel active anim-in">
+  <div class="gen-grid">
+
+    <!-- LEFT -->
+    <div class="gen-left" style="animation:fadeUp .45s .3s ease-out both">
+      <div class="icard">
+
+        <!-- クリエイター -->
+        <div class="field">
+          <label class="lbl">クリエイター選択</label>
+          <div class="c-drop" id="cDrop">
+            <div class="c-drop-trigger" id="cDropTrigger" onclick="toggleDrop()">
+              <span class="c-drop-trigger-label" id="cDropLabel">🍺 ゼパ — 限界酒飲み・マシンガントーク</span>
+              <svg class="c-drop-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="c-drop-menu" id="cDropMenu"></div>
+          </div>
+          <span class="creator-sub" id="creator-sub">#zepa</span>
+        </div>
+
+        <!-- フォーマット -->
+        <div class="field">
+          <label class="lbl">出力フォーマット</label>
+          <div class="fmt-grid">
+            <button class="fmt-btn selected" data-fmt="twitter" onclick="selFmt('twitter',this)">
+              <span class="fmt-icon">𝕏</span>
+              <div class="fmt-text"><span class="fmt-name">X (Twitter) ポスト</span><span class="fmt-hint">140〜280文字 / スレッド対応</span></div>
+              <div class="fmt-radio"><div class="fmt-rdot"></div></div>
+            </button>
+            <button class="fmt-btn" data-fmt="shorts" onclick="selFmt('shorts',this)">
+              <span class="fmt-icon">▶</span>
+              <div class="fmt-text"><span class="fmt-name">YouTube Shorts 台本</span><span class="fmt-hint">約300〜400文字 / 1分以内</span></div>
+              <div class="fmt-radio"><div class="fmt-rdot"></div></div>
+            </button>
+            <button class="fmt-btn" data-fmt="long" onclick="selFmt('long',this)">
+              <span class="fmt-icon">🎬</span>
+              <div class="fmt-text"><span class="fmt-name">YouTube 長尺動画台本</span><span class="fmt-hint">3,000〜5,000文字 / フリートーク</span></div>
+              <div class="fmt-radio"><div class="fmt-rdot"></div></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- テーマ -->
+        <div class="field">
+          <label class="lbl">トークテーマ <span class="req">*</span></label>
+          <textarea id="theme" rows="4" placeholder="例：最近出たコンビニの新作エナジードリンクについて" oninput="onThemeIn()" onkeydown="onThemeKey(event)"></textarea>
+          <p class="key-hint"><kbd>⌘</kbd>+<kbd>Enter</kbd> / <kbd>Ctrl</kbd>+<kbd>Enter</kbd> で即生成</p>
+        </div>
+
+        <!-- 生成ボタン -->
+        <button class="btn-gen" id="genBtn" onclick="generate()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          台本を生成する
+        </button>
+        <p class="btn-hint" id="genHint">⬆ APIキーとテーマを入力すると押せます</p>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULT -->
+    <div style="animation:fadeUp .45s .4s ease-out both">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="lbl">生成結果</span>
+        <button class="btn-copy" id="cpBtn" style="display:none" onclick="copyRes()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー
+        </button>
+      </div>
+
+      <div class="result-panel" id="resPanel">
+        <div class="result-topbar">
+          <div class="tldots"><div class="tl r"></div><div class="tl y"></div><div class="tl g"></div></div>
+          <span class="rmeta" id="rmeta">結果エリア</span>
+          <div class="spill" id="spill" style="display:none"></div>
+        </div>
+
+        <div class="result-body" id="resbody">
+          <div class="s-empty" id="se">
+            <div class="s-empty-icon">✨</div>
+            <p class="s-empty-title">台本がここに表示されます</p>
+            <p class="s-empty-sub">クリエイター・フォーマット・テーマを<br>設定して生成ボタンを押してください</p>
+          </div>
+          <div class="s-load" id="sl">
+            <div class="spin-ring"></div>
+            <div class="bdots"><span></span><span></span><span></span></div>
+            <p class="load-lbl" id="loadlbl">召喚中...</p>
+            <p class="load-sub">Gemini がペルソナに憑依しています</p>
+            <div class="shims">
+              <div class="shim" style="width:78%"></div>
+              <div class="shim" style="width:62%;animation-delay:.25s"></div>
+              <div class="shim" style="width:88%;animation-delay:.5s"></div>
+              <div class="shim" style="width:44%;animation-delay:.75s"></div>
+              <div class="shim" style="width:70%;animation-delay:1s"></div>
+            </div>
+          </div>
+          <div class="s-err" id="serr">
+            <div class="err-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <p class="err-msg" id="errmsg">エラー</p>
+            <button class="btn-retry" onclick="generate()">再試行する →</button>
+          </div>
+          <div class="s-result" id="sres">
+            <pre class="result-pre" id="restxt"></pre>
+          </div>
+        </div>
+
+        <div class="result-footer" id="resftr" style="display:none">
+          <span class="char-ct" id="charcnt">0 文字</span>
+          <button class="btn-copy" onclick="copyRes()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====== TAB: ADD CREATOR ====== -->
+<div id="tab-add" class="tab-panel">
+  <div class="add-wrap">
+    <div class="add-hd">
+      <h2>クリエイターを登録する</h2>
+      <p>分析したクリエイターのプロファイリング結果を登録して、すぐに生成タブで使えるようにします。</p>
+    </div>
+    <div class="acard">
+      <div class="row2">
+        <div class="field">
+          <label class="lbl">クリエイター名 <span class="req">*</span></label>
+          <input type="text" id="nname" placeholder="例：ゼパ、東海オンエア など">
+        </div>
+        <div class="field">
+          <label class="lbl">絵文字</label>
+          <input type="text" id="nicon" placeholder="🎮" class="emoji-inp">
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">短い説明（任意）</label>
+        <input type="text" id="ndesc" placeholder="例：ゲーム実況・ポジティブ系クリエイター">
+      </div>
+      <div class="field">
+        <div class="lbl-row">
+          <label class="lbl">ペルソナ設定・プロンプト <span class="req">*</span></label>
+          <button class="tmpl-btn" onclick="insTmpl()">テンプレートを挿入 →</button>
+        </div>
+        <textarea id="nprompt" rows="13" placeholder="クリエイターの役割・性格・口調・構成フォーマットなどをここに記述してください..." oninput="onPrIn()"></textarea>
+        <span class="pcount" id="pcnt">0 文字</span>
+      </div>
+      <div class="add-err" id="adderr"></div>
+      <button class="btn-gen" id="addBtn" onclick="addCreator()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        クリエイターを登録する
+      </button>
+    </div>
+    <div class="tips" style="margin-top:20px">
+      <p class="tips-tag">💡 高品質なプロンプトのコツ</p>
+      <ul>
+        <li><span>1.</span>「役割」で何者かを明確に定義する（例：あなたは〇〇です）</li>
+        <li><span>2.</span>「前提条件」で年齢・性格・属性・NGラインを書く</li>
+        <li><span>3.</span>「口調ルール」で語尾・使う言葉・テンポを細かく指定する</li>
+        <li><span>4.</span>「構成フォーマット」でツカミ→本題→オチの流れを番号で固定する</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TAB 3: CHANNEL ANALYZE ====== -->
+<div id="tab-analyze" class="tab-panel">
+  <div class="add-wrap">
+    <div class="add-hd">
+      <h2>チャンネルを分析してプロフィールを自動生成</h2>
+      <p>YouTubeチャンネルや動画のURLを貼り付けるとAIがクリエイターを分析し、登録フォームの入力内容をすべて自動生成します。</p>
+    </div>
+
+    <div class="acard">
+      <!-- Channel Name (required) -->
+      <div class="field">
+        <label class="lbl">チャンネル名（正式名称） <span class="req">*</span></label>
+        <input type="text" id="analyzeChName"
+          placeholder="例：五彩緋夏 ひなちゃん5しゃい">
+        <p class="key-hint">AIがチャンネル名を推測しないよう、必ず正確に入力してください</p>
+      </div>
+
+      <!-- Channel URL (required) -->
+      <div class="field">
+        <label class="lbl">YouTubeチャンネルURL <span class="req">*</span></label>
+        <input type="text" id="analyzeChUrl"
+          placeholder="https://www.youtube.com/@armuje">
+        <p class="key-hint">チャンネルのトップページURL（@〜形式）</p>
+      </div>
+
+      <!-- Video URLs (optional) -->
+      <div class="field">
+        <label class="lbl">個別動画URL（任意・多いほど精度UP）</label>
+        <textarea id="analyzeUrl" rows="5"
+          placeholder="https://www.youtube.com/watch?v=xxxxx&#10;https://www.youtube.com/watch?v=yyyyy&#10;&#10;参考にしたい動画URLを改行で区切って貼り付けてください"></textarea>
+        <p class="key-hint">動画URLが多いほど口調・キャラクターの分析精度が上がります</p>
+      </div>
+
+      <!-- Additional Context -->
+      <div class="field">
+        <label class="lbl">補足情報（任意）</label>
+        <textarea id="analyzeContext" rows="3"
+          placeholder="例：本人は20代だがキャラとして5歳設定。関西出身。など、チャンネル名だけでは伝わらない情報を書いてください"></textarea>
+      </div>
+
+      <!-- Analyze Button -->
+      <button class="btn-gen" id="analyzeBtn" onclick="analyzeChannel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        AIでクリエイターを分析する
+      </button>
+    </div>
+
+    <!-- Analysis Loading -->
+    <div id="analyzeLoading" style="display:none;margin-top:20px;">
+      <div class="acard" style="align-items:center;padding:32px;gap:16px;">
+        <div class="spin-ring"></div>
+        <div class="bdots"><span></span><span></span><span></span></div>
+        <p style="font-family:var(--mf);font-size:13px;color:var(--accent);">クリエイターを分析中...</p>
+        <p style="font-size:12px;color:var(--muted);">動画の雰囲気・口調・キャラクターを読み解いています</p>
+      </div>
+    </div>
+
+    <!-- Analysis Result Preview -->
+    <div id="analyzeResult" style="display:none;margin-top:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span class="lbl">🎯 分析結果プレビュー</span>
+        <span style="font-family:var(--mf);font-size:11px;color:var(--green);">✓ 生成完了 — 内容を確認して登録してください</span>
+      </div>
+      <div class="acard" style="gap:16px;">
+
+        <!-- Preview: name + icon -->
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div class="analyze-icon-preview" id="previewIcon">✦</div>
+          <div style="flex:1;">
+            <div class="lbl" style="margin-bottom:6px;">クリエイター名</div>
+            <div class="analyze-preview-val" id="previewName">—</div>
+          </div>
+        </div>
+
+        <!-- Preview: description -->
+        <div>
+          <div class="lbl" style="margin-bottom:6px;">短い説明</div>
+          <div class="analyze-preview-val" id="previewDesc">—</div>
+        </div>
+
+        <!-- Preview: emoji explanation -->
+        <div class="analyze-emoji-box">
+          <span style="font-family:var(--mf);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;">絵文字について</span>
+          <p style="font-size:12px;color:var(--dim);margin-top:6px;line-height:1.6;">絵文字はドロップダウンでクリエイターを一目で識別するための「顔」です。例：<br>🍺 = 酒飲み系 ／ 🎮 = ゲーム系 ／ 📸 = Vlog系 ／ 💪 = 筋トレ系<br>AIが内容に合ったものを自動選択します。後から変更も可能です。</p>
+        </div>
+
+        <!-- Preview: prompt -->
+        <div>
+          <div class="lbl" style="margin-bottom:6px;">生成されたペルソナプロンプト</div>
+          <div class="analyze-prompt-preview" id="previewPrompt">—</div>
+        </div>
+
+        <!-- Register Button -->
+        <button class="btn-gen" id="registerFromAnalyze" onclick="registerAnalyzed()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          このプロフィールでクリエイターを登録する
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="analyzeError" style="display:none;margin-top:16px;" class="add-err"></div>
+
+  </div>
+</div>
+
+
+<!-- ====== TAB 4: MEMO ====== -->
+<div id="tab-memo" class="tab-panel">
+  <div style="max-width:800px;">
+    <div class="add-hd">
+      <h2>📝 クリエイター候補メモ</h2>
+      <p>登録したいクリエイターの候補名・特徴・チャンネルURLなどを自由にメモしておけます。内容はブラウザに自動保存されます。</p>
+    </div>
+    <div class="acard" style="gap:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label class="lbl">メモ</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="memoSaved" style="font-family:var(--mf);font-size:11px;color:var(--green);opacity:0;transition:opacity .3s;">✓ 保存済み</span>
+          <button class="btn-data export" onclick="clearMemo()" style="padding:5px 12px;">クリア</button>
+        </div>
+      </div>
+      <textarea id="memoText" rows="22"
+        style="font-family:var(--mf);font-size:12.5px;line-height:1.9;resize:vertical;"
+        placeholder="登録候補のクリエイターをメモしておきましょう。&#10;&#10;例）&#10;━━━━━━━━━━&#10;■ 五彩緋夏 ひなちゃん5しゃい&#10;URL: https://www.youtube.com/@armuje&#10;20代女性。5歳設定キャラ。癒し系。&#10;&#10;■ ゼパ&#10;URL: https://www.youtube.com/@zepa&#10;限界酒飲み。関西弁。自虐ネタ。&#10;━━━━━━━━━━"
+        oninput="autoSaveMemo()"></textarea>
+      <p class="key-hint">入力内容はリアルタイムで自動保存されます（ブラウザのlocalStorage）</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- .tab-container -->
+</div><!-- #app -->
+
+<!-- HISTORY DRAWER -->
+<div id="overlay" onclick="closeDrawer()"></div>
+<div id="hdr">
+  <div class="drw-head">
+    <span class="drw-title">生成履歴</span>
+    <div class="drw-acts">
+      <button class="btn-clr" onclick="clearHist()">すべて削除</button>
+      <button class="btn-drw-close" onclick="closeDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+  <div class="drw-body" id="drwbody"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══ STATE ═══ */
+/*__CPS_C_S__*/const CREATORS=[{id:'zepa',name:'ゼパ',icon:'🍺',description:'限界酒飲み・マシンガントーク',prompt:`役割: あなたは、YouTubeで大人気の「限界酒飲み・マシンガントーククリエイター（ゼパ）」です。入力されたテーマについて、単なる説明ではなく、あなた自身の架空の日常エピソードや独自の哲学を交えて二次創作的に語ってください。
+
+前提条件: 20代後半。お酒（ストゼロ、ハイボール）がガソリン。引きこもり体質。ゲラで楽観的だが、モテなかったことや勉強できなかった自虐を持つ。他人を傷つける悪口や不快な下ネタは言わない。
+
+口調ルール: 関西弁混じりのフランクなネットスラング。「〜なんすよ」「〜やんけ」「マジで」「草」を多用。文末の句点（。）は使わず改行でテンポを作る。絵文字は極力使わない。
+
+構成フォーマット: 1.ツカミ → 2.限界エピソード（テーマにこじつけた自虐） → 3.本題に対する独自の解釈・持論 → 4.謎の悟りや酒に逃げるオチ。`}];/*__CPS_C_E__*/
+
+const FLBLS={twitter:'X ポスト',shorts:'Shorts 台本',long:'長尺動画台本'};
+const FPRMP={
+  twitter:n=>`【X (Twitter) ポスト】最初は140文字以内。スレッドは番号（1/3等）で分割。テンポよく。ハッシュタグ不要。合計最大500文字。${n}がリアルにポストしそうな言葉で。`,
+  shorts:n=>`【YouTube Shorts 台本】1分以内（300〜400文字）。冒頭0〜3秒でフック必須。テンポ重視・1文短く。セリフのみ（演出指示不要）。そのまま読み上げられる形式。${n}が実際に喋るリアルな口調で。`,
+  long:n=>`【YouTube 長尺動画台本】10分以上（3,000〜5,000文字）。フリートーク・脱線OK。構成:[OP]→[本題①]→[脱線エピソード]→[本題②]→[まとめ・オチ]→[エンディング一言]。「えー」「あのー」など話し言葉も適宜混ぜる。${n}らしい独自哲学・自虐を随所に。そのまま読み上げられる形式。`,
+};
+const HK='cps_hist_v4';
+let curTab='generate',selFmtId='twitter',curRes='',selModel='gemini-2.5-flash-lite'/*__CPS_M__*/;
+
+/* ═══ INIT ═══ */
+addEventListener('DOMContentLoaded',()=>{
+  const k=/*__CPS_K__*/localStorage.getItem('cps_gkey')/*__CPS_K_E__*/;
+  if(k) document.getElementById('apiKey').value=k;
+  const sm=localStorage.getItem('cps_model');
+  if(sm) { document.getElementById('modelSel').value=sm; selModel=sm; }
+  updBtn();renderSel();renderBadge();loadMemo();
+});
+
+/* ═══ EXPORT / IMPORT CREATORS ═══ */
+function exportCreators(){
+  // exclude built-in zepa to keep file small, but include all including zepa for safety
+  const data={version:1,creators:CREATORS,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement('a'),{href:url,download:'creators_'+new Date().toISOString().slice(0,10)+'.json'});
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast('✓ '+CREATORS.length+' 件のクリエーターをエクスポートしました');
+}
+async function exportHtml(){
+  try{
+    let src = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+    // ── 1. Embed CREATORS using unique markers ──
+    const CS = '/*__CPS_C_S__*/';
+    const CE = '/*__CPS_C_E__*/';
+    const ci_s = src.indexOf(CS);
+    const ci_e = src.indexOf(CE);
+    if(ci_s === -1 || ci_e === -1){ toast('⚠ CREATORS マーカーが見つかりません'); return; }
+    const newCreators = CS + 'const CREATORS=' + JSON.stringify(CREATORS) + ';' + CE;
+    src = src.slice(0, ci_s) + newCreators + src.slice(ci_e + CE.length);
+
+    // ── 2. Embed API Key using markers ──
+    const apiKeyVal = document.getElementById('apiKey').value.trim();
+    if(apiKeyVal){
+      const KS = '/*__CPS_K__*/';
+      const KE = '/*__CPS_K_E__*/';
+      const ki_s = src.indexOf(KS);
+      const ki_e = src.indexOf(KE);
+      if(ki_s !== -1 && ki_e !== -1){
+        src = src.slice(0, ki_s) + KS + "'" + apiKeyVal + "'" + KE + src.slice(ki_e + KE.length);
+      }
+    }
+
+    // ── 3. Embed selected model ──
+    const modelVal = document.getElementById('modelSel').value;
+    const MM = '/*__CPS_M__*/';
+    const mi = src.indexOf(MM);
+    if(mi !== -1){
+      // Replace everything between the last ' before MM and MM itself
+      const before = src.lastIndexOf("'", mi);
+      if(before !== -1){
+        src = src.slice(0, before + 1) + modelVal + src.slice(mi);
+      }
+    }
+
+    // ── 4. Download ──
+    const blob = new Blob([src], {type:'text/html;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), {href:url, download:'index.html'});
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('✓ APIキー・クリエイター' + CREATORS.length + '件込みのindex.htmlをダウンロードしました');
+  }catch(e){
+    toast('⚠ エクスポートに失敗しました: ' + e.message);
+  }
+}
+function importCreators(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.creators||!Array.isArray(data.creators))throw new Error('フォーマットが無効です');
+      // Merge: keep existing, add new ones by id
+      const existIds=new Set(CREATORS.map(c=>c.id));
+      let added=0;
+      data.creators.forEach(c=>{
+        if(!existIds.has(c.id)){CREATORS.push(c);added++;}
+      });
+      renderSel();
+      toast('✓ '+added+' 件のクリエーターをインポートしました（重複はスキップ）');
+    }catch(err){
+      toast('⚠ 読み込みに失敗しました: '+err.message);
+    }
+    e.target.value=''; // reset so same file can be re-imported
+  };
+  reader.readAsText(file);
+}
+
+/* ═══ SAVE KEY ═══ */
+function saveKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  if(!k){toast('⚠ APIキーを入力してください');return;}
+  localStorage.setItem('cps_gkey',k);
+  const btn=document.getElementById('saveKeyBtn');
+  btn.classList.add('saved');
+  btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 保存済み';
+  updBtn();
+  setTimeout(()=>{btn.classList.remove('saved');btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 保存';},2500);
+}
+function onModelChange(){
+  selModel=document.getElementById('modelSel').value;
+  localStorage.setItem('cps_model',selModel);
+}
+
+/* ═══ TAB SWITCH — crossfade ═══ */
+function switchTab(t){
+  if(t===curTab)return;
+  const out=document.getElementById('tab-'+curTab);
+  const inn=document.getElementById('tab-'+t);
+  out.style.transition='opacity .2s ease,transform .2s ease';
+  out.style.opacity='0';out.style.transform='translateY(6px)';
+  setTimeout(()=>{
+    out.classList.remove('active');out.style.cssText='';
+    inn.classList.add('active');
+    inn.style.opacity='0';inn.style.transform='translateY(6px)';
+    inn.style.transition='opacity .28s ease,transform .28s ease';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{inn.style.opacity='1';inn.style.transform='translateY(0)';}));
+  },200);
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  curTab=t;
+}
+
+/* ═══ FORMAT SELECT ═══ */
+function selFmt(id,el){
+  if(selFmtId===id)return;
+  const old=document.querySelector('.fmt-btn.selected');
+  if(old){old.style.transition='all .22s ease';old.classList.remove('selected');}
+  requestAnimationFrame(()=>{el.style.transition='all .22s ease';el.classList.add('selected');selFmtId=id;});
+}
+
+/* ═══ CREATOR SELECT ═══ */
+// ── Custom Dropdown State ──
+let curCreatorId = 'zepa';
+let dropOpen = false;
+
+function renderSel(){
+  renderDropMenu();
+  document.getElementById('badge-lbl').textContent=CREATORS.length+' クリエイター';
+}
+function renderDropMenu(){
+  const menu = document.getElementById('cDropMenu');
+  menu.innerHTML = CREATORS.map(c => {
+    const isActive = c.id === curCreatorId;
+    return '<div class="c-drop-item' + (isActive?' active':'') + '" onclick="selectCreator(\'' + c.id + '\')">' +
+      '<span class="c-drop-item-icon">' + (c.icon||'✦') + '</span>' +
+      '<span class="c-drop-item-text">' +
+        '<span class="c-drop-item-name">' + esc(c.name) + '</span>' +
+        (c.description ? '<br><span class="c-drop-item-desc">' + esc(c.description) + '</span>' : '') +
+      '</span>' +
+      (isActive ? '<svg class="c-drop-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
+      '<button class="c-drop-del" title="削除" onclick="deleteCreator(event,\'' + c.id + '\')">' +
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>' +
+    '</div>';
+  }).join('');
+}
+function deleteCreator(e, id){
+  e.stopPropagation();
+  const creator = CREATORS.find(x => x.id === id);
+  if(!creator) return;
+  if(!confirm('「' + creator.name + '」を削除しますか？')) return;
+  const idx = CREATORS.findIndex(x => x.id === id);
+  CREATORS.splice(idx, 1);
+  // If deleted the selected one, switch to first available
+  if(curCreatorId === id){
+    if(CREATORS.length > 0){
+      selectCreator(CREATORS[0].id);
+    } else {
+      curCreatorId = '';
+      document.getElementById('cDropLabel').textContent = '（クリエイターなし）';
+      document.getElementById('creator-sub').textContent = '';
+    }
+  }
+  renderSel();
+  closeDrop();
+  toast('🗑 「' + creator.name + '」を削除しました');
+}
+
+function toggleDrop(){
+  dropOpen=!dropOpen;
+  document.getElementById('cDropTrigger').classList.toggle('open',dropOpen);
+  document.getElementById('cDropMenu').classList.toggle('open',dropOpen);
+}
+function closeDrop(){
+  if(!dropOpen)return;
+  dropOpen=false;
+  document.getElementById('cDropTrigger').classList.remove('open');
+  document.getElementById('cDropMenu').classList.remove('open');
+}
+function selectCreator(id){
+  curCreatorId=id;
+  const c=CREATORS.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('cDropLabel').textContent=(c.icon?c.icon+' ':'')+c.name+(c.description?' — '+c.description:'');
+  document.getElementById('creator-sub').textContent='#'+id;
+  renderDropMenu();
+  closeDrop();
+}
+// Close dropdown when clicking outside
+document.addEventListener('click',e=>{
+  if(!document.getElementById('cDrop')?.contains(e.target))closeDrop();
+});
+function onCreatorChange(){updSub();}
+function updSub(){document.getElementById('creator-sub').textContent='#'+curCreatorId;}
+
+/* ═══ BUTTON STATE ═══ */
+function onKeyIn(){updBtn();}
+function onThemeIn(){updBtn();}
+function updBtn(){
+  const k=document.getElementById('apiKey').value.trim();
+  const t=document.getElementById('theme').value.trim();
+  const disabled=!k||!t;
+  document.getElementById('genBtn').disabled=disabled;
+  const hint=document.getElementById('genHint');
+  if(hint){
+    if(disabled){
+      hint.classList.remove('hidden');
+      if(!k) hint.textContent='⬆ まずAPIキーを入力・保存してください';
+      else    hint.textContent='⬆ トークテーマを入力すると押せます';
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
+}
+function onThemeKey(e){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();generate();}}
+
+/* ═══ GENERATE — Gemini ═══ */
+async function generate(){
+  const apiKey=document.getElementById('apiKey').value.trim();
+  const theme=document.getElementById('theme').value.trim();
+  const creator=CREATORS.find(c=>c.id===curCreatorId);
+  if(!apiKey){toast('⚠ APIキーを入力してください');return;}
+  if(!theme){toast('⚠ テーマを入力してください');return;}
+  if(!creator){toast('⚠ クリエイターを選択してください');return;}
+
+  setRS('loading',{creator});
+  document.getElementById('genBtn').disabled=true;
+
+  const sys=`# ミッション
+あなたはトップクリエイターの脳内を完全にトレースし、テキストを出力する天才ゴーストライターAIです。
+以下の【クリエイタープロファイル】を深読みし、単なる「キャラクターの真似事」ではなく、読者が「本人の声で脳内再生される」レベルの生々しいテキストを生成してください。
+
+# 変数
+【クリエイタープロファイル: ${creator.name}】
+${creator.prompt}
+
+【今回のテーマ/お題】
+${theme}
+
+# 再現における5つの絶対原則（鉄則）
+
+1. 意図的なノイズと「揺らぎ」の導入（人間味の演出）
+   - AI特有の「論理的で整いすぎた文章」を禁止します。
+   - 途中で話が少し脱線して戻る、急に視聴者に語りかける（「今、絶対嘘だろって思ったでしょ？」など）、自分自身にツッコミを入れるなど、人間の喋り言葉特有の「揺らぎ」や「ノイズ」を自然に混ぜ込んでください。
+
+2. 視覚的リズムと「間（ま）」のコントロール
+   - 画面いっぱいに文字が詰まった「文字の壁」を作らないでください。
+   - 感情が動くポイントや強調したい言葉の前後は、思い切って改行（空白行）を入れ、読者がスクロールする際の「視覚的なリズム」と「タメ」を作ってください。
+
+3. 構成の黄金律（フック→体験→哲学）
+   - 【フック】冒頭1〜2行で読者のスクロールを止める強い一言。
+   - 【生きた体験】テーマに沿った架空の日常エピソード。必ず「五感（見たもの・音）」と「その瞬間の生々しい感情」を描写すること。
+   - 【独自の哲学】その体験から導き出される、クリエイター独自の偏愛、怒り、または価値観。
+
+4. 魂の宿る口調の完全再現
+   - プロファイルにある語尾・スラング・テンポをベースに、感情の起伏に合わせてリズムを変化させてください。
+   - 「らしくない言葉」「丁寧すぎる表現」は徹底的に排除してください。
+
+5. 厳格な禁止事項
+   - 実在する人物、企業、団体への誹謗中傷や炎上リスクのある発言
+   - プロファイルに明記されたNGラインの抵触
+   - 「こんにちは」「以下が台本です」などのAI的なメタ発言・前置き・後書きの【一切の禁止】
+   - ※出力は、クリエイターが語り出す「最初の一文字」から始め、テキスト本文のみを出力すること。
+
+${FPRMP[selFmtId](creator.name)}`;
+  const usr=`テーマ: 「${theme}」\n\nこのテーマについて、${creator.name}として語ってください。`;
+
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selModel}:generateContent?key=${apiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:sys}]},
+        contents:[{role:'user',parts:[{text:usr}]}],
+        generationConfig:{maxOutputTokens:4096,temperature:0.95}
+      })
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`APIエラー (${res.status})`);}
+    const data=await res.json();
+    const txt=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    if(!txt)throw new Error('Geminiから応答が返りませんでした');
+    curRes=txt;
+    setRS('result',{creator,text:txt});
+    addHist({creator,format:selFmtId,theme,content:txt});
+  }catch(e){setRS('error',{msg:e.message});}
+  finally{updBtn();}
+}
+
+/* ═══ RESULT STATE MACHINE ═══ */
+function setRS(state,data={}){
+  const body=document.getElementById('resbody');
+  body.style.opacity='0';
+  setTimeout(()=>{
+    ['se','sl','serr','sres'].forEach(id=>{document.getElementById(id).style.display='none';});
+    const panel=document.getElementById('resPanel');
+    const ftr=document.getElementById('resftr');
+    const spill=document.getElementById('spill');
+    const cpBtn=document.getElementById('cpBtn');
+    ftr.style.display='none';cpBtn.style.display='none';
+    panel.classList.remove('has-r');spill.style.display='none';
+
+    if(state==='loading'){
+      const e=document.getElementById('sl');e.style.display='flex';
+      document.getElementById('loadlbl').textContent=(data.creator?.name||'')+' を召喚中...';
+      document.getElementById('rmeta').textContent=FLBLS[selFmtId]+' / 生成中';
+      spill.style.display='flex';spill.className='spill busy';spill.innerHTML='<div class="spill-dot"></div>処理中';
+    }else if(state==='error'){
+      document.getElementById('serr').style.display='flex';
+      document.getElementById('errmsg').textContent=data.msg||'エラーが発生しました';
+      document.getElementById('rmeta').textContent='エラー';
+    }else if(state==='result'){
+      panel.classList.add('has-r');
+      const e=document.getElementById('sres');e.style.display='block';
+      document.getElementById('restxt').textContent=data.text;
+      document.getElementById('charcnt').textContent=data.text.length.toLocaleString()+' 文字';
+      document.getElementById('rmeta').textContent=data.creator.name+' / '+FLBLS[selFmtId];
+      spill.style.display='flex';spill.className='spill ok';spill.innerHTML='<div class="spill-dot"></div>生成完了';
+      ftr.style.display='flex';cpBtn.style.display='flex';
+    }else{
+      document.getElementById('se').style.display='flex';
+      document.getElementById('rmeta').textContent='結果エリア';
+    }
+    body.style.opacity='1';
+  },180);
+}
+
+/* ═══ COPY ═══ */
+async function copyRes(){
+  if(!curRes)return;
+  try{await navigator.clipboard.writeText(curRes);}
+  catch{const ta=Object.assign(document.createElement('textarea'),{value:curRes});document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  document.querySelectorAll('.btn-copy').forEach(b=>{
+    b.classList.add('copied');
+    b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> コピー済み';
+    setTimeout(()=>{b.classList.remove('copied');b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>コピー';},1800);
+  });
+}
+
+/* ═══ ADD CREATOR ═══ */
+function onPrIn(){document.getElementById('pcnt').textContent=document.getElementById('nprompt').value.length+' 文字';}
+function addCreator(){
+  const name=document.getElementById('nname').value.trim();
+  const prompt=document.getElementById('nprompt').value.trim();
+  const desc=document.getElementById('ndesc').value.trim();
+  const icon=document.getElementById('nicon').value.trim();
+  const err=document.getElementById('adderr');
+  err.style.display='none';
+  if(!name){err.textContent='クリエイター名を入力してください';err.style.display='block';return;}
+  if(!prompt){err.textContent='ペルソナ設定を入力してください';err.style.display='block';return;}
+  CREATORS.push({id:'c_'+Date.now(),name,icon:icon||'✦',description:desc||undefined,prompt});
+  renderSel();
+  selectCreator(CREATORS[CREATORS.length-1].id);
+  const btn=document.getElementById('addBtn');
+  btn.classList.add('success');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg>登録完了！生成タブから選択できます';
+  setTimeout(()=>{
+    btn.classList.remove('success');
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>クリエイターを登録する';
+    ['nname','nprompt','ndesc','nicon'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pcnt').textContent='0 文字';
+    switchTab('generate');
+  },2400);
+}
+function insTmpl(){
+  document.getElementById('nprompt').value=`役割: あなたは[クリエイター名]です。入力されたテーマについて、自身の架空の日常エピソードや独自の哲学を交えて語ってください。\n\n前提条件: [年齢・性格・趣味・口癖などの設定を記述]\n\n口調ルール: [話し方・文体・使う言葉の特徴を記述]\n\n構成フォーマット: 1.ツカミ → 2.[キャラクター固有のエピソード] → 3.本題に対する独自解釈 → 4.オチ`;
+  onPrIn();
+}
+
+/* ═══ HISTORY ═══ */
+function loadH(){try{return JSON.parse(localStorage.getItem(HK)||'[]');}catch{return[];}}
+function saveH(a){localStorage.setItem(HK,JSON.stringify(a.slice(0,60)));}
+function addHist({creator,format,theme,content}){
+  const a=loadH();
+  a.unshift({id:Date.now(),cname:creator.name,cicon:creator.icon||'✦',fmt:format,flbl:FLBLS[format],theme,content,ts:new Date().toISOString(),chars:content.length});
+  saveH(a);renderBadge();
+  if(document.getElementById('hdr').classList.contains('open'))renderDrw();
+}
+function renderBadge(){
+  const n=loadH().length,el=document.getElementById('hbadge');
+  if(n>0){el.textContent=n>99?'99+':n;el.style.display='flex';el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+  else el.style.display='none';
+}
+function openDrawer(){document.getElementById('hdr').classList.add('open');document.getElementById('overlay').classList.add('open');renderDrw();}
+function closeDrawer(){document.getElementById('hdr').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
+function renderDrw(){
+  const a=loadH(),body=document.getElementById('drwbody');
+  if(!a.length){body.innerHTML='<div class="h-empty"><div class="h-empty-icon">📜</div><p class="h-empty-txt">まだ履歴がありません</p></div>';return;}
+  body.innerHTML=`<div class="h-list">${a.map((x,i)=>`
+<div class="h-item" style="animation-delay:${i*40}ms" onclick="loadH_item(${x.id})">
+  <button class="btn-hdel" onclick="delH(event,${x.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div class="h-item-top"><span class="h-creator">${x.cicon} ${esc(x.cname)}</span><span class="h-fmt">${esc(x.flbl)}</span></div>
+  <div class="h-theme">${esc(x.theme)}</div>
+  <div class="h-foot"><span class="h-time">${fmtT(x.ts)}</span><span class="h-chars">${x.chars.toLocaleString()} 文字</span></div>
+</div>`).join('')}</div>`;
+}
+function loadH_item(id){
+  const item=loadH().find(x=>x.id===id);if(!item)return;
+  curRes=item.content;
+  selFmtId=item.fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.toggle('selected',b.dataset.fmt===item.fmt));
+  document.getElementById('theme').value=item.theme;
+  // restore creator if still exists
+  if(CREATORS.find(c=>c.name===item.cname)){
+    const found=CREATORS.find(c=>c.name===item.cname);
+    if(found) selectCreator(found.id);
+  }
+  updBtn();
+  const fake={name:item.cname,icon:item.cicon};
+  if(curTab!=='generate')switchTab('generate');
+  setTimeout(()=>setRS('result',{creator:fake,text:item.content}),curTab!=='generate'?360:0);
+  closeDrawer();toast('✦ 履歴を読み込みました');
+}
+function delH(e,id){e.stopPropagation();saveH(loadH().filter(x=>x.id!==id));renderBadge();renderDrw();}
+function clearHist(){if(!confirm('すべての履歴を削除しますか？'))return;localStorage.removeItem(HK);renderBadge();renderDrw();}
+
+/* ═══ HELPERS ═══ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtT(iso){
+  const d=new Date(iso),now=new Date(),m=Math.floor((now-d)/60000);
+  if(m<1)return'たった今';if(m<60)return m+'分前';
+  const h=Math.floor(m/60);if(h<24)return h+'時間前';
+  return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+/* ═══ ANALYZE CHANNEL ═══ */
+let analyzedData = null;
+
+async function analyzeChannel(){
+  const apiKey   = document.getElementById('apiKey').value.trim();
+  const chName   = document.getElementById('analyzeChName').value.trim();
+  const chUrl    = document.getElementById('analyzeChUrl').value.trim();
+  const videoUrl = document.getElementById('analyzeUrl').value.trim();
+  const context  = document.getElementById('analyzeContext').value.trim();
+
+  if(!apiKey)  { toast('⚠ APIキーを入力・保存してください'); return; }
+  if(!chName)  { toast('⚠ チャンネル名を入力してください'); return; }
+  if(!chUrl)   { toast('⚠ チャンネルURLを入力してください'); return; }
+
+  // Show loading, hide previous results
+  document.getElementById('analyzeLoading').style.display = 'block';
+  document.getElementById('analyzeResult').style.display  = 'none';
+  document.getElementById('analyzeError').style.display   = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+
+  try{
+    // Build prompt with channel name locked in
+    const videoLines  = videoUrl  ? '\n【参考動画URL】\n' + videoUrl : '';
+    const contextLine = context   ? '\n【補足情報（最優先で参考にすること）】\n' + context : '';
+    const prompt = [
+      'あなたはYouTubeクリエイター分析AIです。',
+      '以下の情報を元に、ゴーストライティングツール用ペルソナプロフィールをJSON形式で生成してください。',
+      '',
+      '【チャンネル名（確定・絶対に変更禁止）】 ' + chName,
+      '【チャンネルURL】 ' + chUrl,
+      videoLines,
+      contextLine,
+      '',
+      '重要ルール:',
+      '・nameフィールドは必ず「' + chName + '」をそのまま使うこと。推測・変更・省略は絶対禁止。',
+      '・チャンネル名が比喩やキャラクター設定の場合も、そのままnameに入れること。',
+      '・iconは動画のコンテンツ内容・雰囲気から選ぶ（チャンネル名の字義的解釈は禁止）。',
+      '・descriptionはチャンネル名の表面的意味ではなく実際の動画内容・キャラクターの実態を書く。',
+      '・promptの前提条件はキャラクター設定の実態を記述（チャンネル名から机上で推測しない）。',
+      '',
+      '以下のJSON形式のみで出力（前置き・説明・余計なテキストは一切不要）:',
+      '{',
+      '  "name": "' + chName + '",',
+      '  "icon": "コンテンツ内容を表す絵文字1文字",',
+      '  "description": "20文字以内・実際のコンテンツ内容や雰囲気を表す説明",',
+      '  "prompt": "役割:\n[説明]\n\n前提条件:\n[実際のキャラクター設定・性格・得意ネタ・NGライン]\n\n口調ルール:\n[実際の話し方・語尾・スラング・テンポ]\n\n構成フォーマット:\n1.ツカミ → 2.[固有のエピソード展開] → 3.本題の独自解釈 → 4.[このクリエイターらしいオチ]"',
+      '}'
+    ].join('\n');
+
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + selModel + ':generateContent?key=' + apiKey;
+    const res = await fetch(url,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          contents:[{role:'user',parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:2048,temperature:0.7}
+        })
+      }
+    );
+    if(!res.ok){
+      const e = await res.json().catch(()=>({}));
+      throw new Error(e?.error?.message || 'APIエラー ('+res.status+')');
+    }
+    const data = await res.json();
+    let txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Strip markdown code fences if present
+    txt = txt.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+
+    const parsed = JSON.parse(txt);
+    parsed._chName = chName;  // lock the user-provided name
+    analyzedData = parsed;
+
+    // Render preview — always use user-provided chName for name
+    document.getElementById('previewIcon').textContent = parsed.icon || '✦';
+    document.getElementById('previewName').textContent = chName;  // locked
+    document.getElementById('previewDesc').textContent = parsed.description || '（説明なし）';
+    document.getElementById('previewPrompt').textContent = parsed.prompt || '（プロンプトなし）';
+
+    document.getElementById('analyzeResult').style.display = 'block';
+    document.getElementById('analyzeResult').scrollIntoView({behavior:'smooth',block:'start'});
+
+  }catch(e){
+    const errEl = document.getElementById('analyzeError');
+    errEl.textContent = '⚠ 分析に失敗しました: ' + e.message + '\n\nURLが正しいか、APIキーが有効かを確認してください。';
+    errEl.style.display = 'block';
+    errEl.style.whiteSpace = 'pre-line';
+  }finally{
+    document.getElementById('analyzeLoading').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function registerAnalyzed(){
+  if(!analyzedData){ toast('⚠ 分析結果がありません'); return; }
+  const id = 'c_' + Date.now();
+  CREATORS.push({
+    id,
+    name:        analyzedData._chName     || analyzedData.name || '名前未設定',
+    icon:        analyzedData.icon        || '✦',
+    description: analyzedData.description || undefined,
+    prompt:      analyzedData.prompt      || '',
+  });
+  renderSel();
+  selectCreator(id);
+  toast('✓「' + analyzedData.name + '」を登録しました！生成タブから選択できます');
+  // Switch to generate tab after short delay
+  setTimeout(() => switchTab('generate'), 800);
+}
+
+/* ═══ MEMO ═══ */
+const MEMO_KEY = 'cps_memo_v1';
+function autoSaveMemo(){
+  const txt = document.getElementById('memoText').value;
+  localStorage.setItem(MEMO_KEY, txt);
+  const el = document.getElementById('memoSaved');
+  el.style.opacity = '1';
+  clearTimeout(window._memoTimer);
+  window._memoTimer = setTimeout(() => el.style.opacity = '0', 2000);
+}
+function loadMemo(){
+  const saved = localStorage.getItem(MEMO_KEY);
+  if(saved) document.getElementById('memoText').value = saved;
+}
+function clearMemo(){
+  if(!confirm('メモをすべて削除しますか？')) return;
+  document.getElementById('memoText').value = '';
+  localStorage.removeItem(MEMO_KEY);
+  toast('🗑 メモを削除しました');
+}
+
+let toastT;
+function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2300);}
+</script>
+</body>
+</html>
